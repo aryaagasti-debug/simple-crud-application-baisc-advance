@@ -24,7 +24,10 @@ import {
 } from '../common/validators/file-image.validator';
 import { diskStorage } from 'multer';
 import * as authRequest from '../auth/types/auth-request';
+import { ApiTags, ApiConsumes, ApiBody } from '@nestjs/swagger';
+// import { Throttle } from '@nestjs/throttler'; // Removed import as it's no longer needed
 
+@ApiTags('Users')
 @Controller('users')
 export class UsersController {
   constructor(private users: UsersService) {}
@@ -61,7 +64,17 @@ export class UsersController {
 
   // ✅ ✅ UPLOAD PROFILE AVATAR (JWT PROTECTED)
   @UseGuards(JwtCookieGuard)
+  // @Throttle({ default: { limit: 3, ttl: 60 } }) // Removed - uses global default
   @Patch('avatar')
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: { type: 'string', format: 'binary' },
+      },
+    },
+  })
   @UseInterceptors(
     FileInterceptor('file', {
       limits: { fileSize: maxImageSize },

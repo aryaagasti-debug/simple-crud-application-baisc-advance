@@ -4,6 +4,8 @@ import { LoginDto } from './dto/login.dto';
 import express from 'express';
 import { JwtService } from '@nestjs/jwt';
 import { AppLogger } from '../utils/logger';
+import { ApiOperation, ApiBody, ApiResponse } from '@nestjs/swagger';
+// import { Throttle } from '@nestjs/throttler'; // Removed import as it's no longer needed
 
 @Controller('auth')
 export class AuthController {
@@ -12,7 +14,19 @@ export class AuthController {
     private jwt: JwtService,
   ) {}
 
+  // ✅ Rate limiting now applied by the global guard using AppModule's default (3 req / 60s)
+  // @Throttle({ default: { limit: 3, ttl: 60 } }) // Removed
   @Post('login')
+  @ApiOperation({ summary: 'User login using email & password' })
+  @ApiBody({
+    schema: {
+      example: {
+        email: 'admin@gmail.com',
+        password: 'admin123',
+      },
+    },
+  })
+  @ApiResponse({ status: 200, description: 'Login successful' })
   async login(
     @Body() dto: LoginDto,
     @Res({ passthrough: true }) res: express.Response,

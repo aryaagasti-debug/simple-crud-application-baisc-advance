@@ -1,17 +1,17 @@
 import { IsEmail, IsString, MinLength } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateUserDto {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+  @ApiProperty({ example: 'Arya' })
   @IsString()
   name: string;
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+  @ApiProperty({ example: 'arya@gmail.com' })
   @IsEmail()
   email: string;
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+  @ApiProperty({ example: 'password123' })
   @IsString()
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   @MinLength(6)
   password: string;
 }

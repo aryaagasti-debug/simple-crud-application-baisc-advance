@@ -8,7 +8,7 @@ export function imageFileFilter(
   callback: Function,
 ) {
   const allowed = /jpg|jpeg|png/;
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
+
   const ext = extname(file.originalname).toLowerCase();
 
   if (!allowed.test(ext)) {

@@ -23,13 +23,33 @@ import {
 import { diskStorage } from 'multer';
 import * as authRequest from '../auth/types/auth-request';
 import { AppLogger } from '../utils/logger';
+import { ApiTags, ApiConsumes, ApiBody, ApiOperation } from '@nestjs/swagger';
+// import { Throttle } from '@nestjs/throttler'; // Removed import as it's no longer needed
+
+@ApiTags('Posts')
 @Controller('post')
 export class PostController {
   constructor(private readonly postService: PostService) {}
 
   // ✅ ✅ MULTIPLE IMAGE POST CREATE (FINAL FIXED VERSION)
   @UseGuards(JwtCookieGuard)
+  // @Throttle({ default: { limit: 3, ttl: 60 } }) // Removed - uses global default
   @Post()
+  @ApiOperation({ summary: 'Create post with multiple images' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        title: { type: 'string', example: 'My first post' },
+        content: { type: 'string', example: 'Hello world' },
+        files: {
+          type: 'array',
+          items: { type: 'string', format: 'binary' },
+        },
+      },
+    },
+  })
   @UseInterceptors(
     FilesInterceptor('files', 5, {
       limits: { fileSize: maxImageSize },
