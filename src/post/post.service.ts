@@ -1,13 +1,14 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CloudinaryService } from '../common/cloudinary/cloudinary.service';
-import { AppLogger } from '../utils/logger'; // ✅ ADD
+import { AppLogger } from '../utils/logger';
+import { sanitizeText } from '../common/utils/sanitize';
 
 @Injectable()
 export class PostService {
   constructor(
-    private prisma: PrismaService,
-    private cloud: CloudinaryService,
+    private readonly prisma: PrismaService,
+    private readonly cloud: CloudinaryService,
   ) {}
 
   async createPost(
@@ -15,30 +16,32 @@ export class PostService {
     userId: number,
     imagePaths: string[] = [],
   ) {
-    AppLogger.info('Uploading post images to cloud', {
+    AppLogger.info('Uploading post images', {
       userId,
       imageCount: imagePaths.length,
     });
 
     const uploadedUrls: string[] = [];
 
-    //  Upload each image to Cloudinary
     for (const path of imagePaths) {
       const uploaded = await this.cloud.uploadFile(path);
       uploadedUrls.push(uploaded.secure_url);
     }
 
-    // ✅ Save post in DB
     const post = await this.prisma.post.create({
       data: {
-        title: data.title,
-        content: data.content,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        title: sanitizeText(data.title),
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        content: sanitizeText(data.content),
         imageUrls: uploadedUrls,
         authorId: userId,
       },
     });
 
-    AppLogger.info('Post created successfully', { postId: post.id });
+    AppLogger.info('Post created successfully', {
+      postId: post.id,
+    });
 
     return post;
   }

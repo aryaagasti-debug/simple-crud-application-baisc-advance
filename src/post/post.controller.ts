@@ -24,18 +24,16 @@ import { diskStorage } from 'multer';
 import * as authRequest from '../auth/types/auth-request';
 import { AppLogger } from '../utils/logger';
 import { ApiTags, ApiConsumes, ApiBody, ApiOperation } from '@nestjs/swagger';
-// import { Throttle } from '@nestjs/throttler'; // Removed import as it's no longer needed
 
 @ApiTags('Posts')
 @Controller('post')
 export class PostController {
   constructor(private readonly postService: PostService) {}
 
-  // ✅ ✅ MULTIPLE IMAGE POST CREATE (FINAL FIXED VERSION)
+  // ✅ CREATE POST (WORKS WITH OR WITHOUT IMAGES)
   @UseGuards(JwtCookieGuard)
-  // @Throttle({ default: { limit: 3, ttl: 60 } }) // Removed - uses global default
   @Post()
-  @ApiOperation({ summary: 'Create post with multiple images' })
+  @ApiOperation({ summary: 'Create post with optional images' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
@@ -63,15 +61,17 @@ export class PostController {
     }),
   )
   create(
-    @UploadedFiles() files: Express.Multer.File[],
+    @UploadedFiles() files: Express.Multer.File[] | undefined,
     @Body() body: { title: string; content: string },
     @Req() req: authRequest.AuthRequest,
   ) {
+    const imagePaths = files?.map((file) => file.path) ?? [];
+
     AppLogger.info('Creating post', {
       userId: req.user.id,
-      imageCount: files.length,
+      imageCount: imagePaths.length,
     });
-    const imagePaths = files?.map((file) => file.path) ?? [];
+
     return this.postService.createPost(body, req.user.id, imagePaths);
   }
 
@@ -103,7 +103,7 @@ export class PostController {
     );
   }
 
-  // ✅ ADMIN OR AUTHOR DELETE
+  // ✅ AUTHOR OR ADMIN DELETE
   @UseGuards(JwtCookieGuard, RolesGuard)
   @Roles('admin', 'user')
   @Delete(':id')
