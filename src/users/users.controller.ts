@@ -25,6 +25,8 @@ import {
 import { diskStorage } from 'multer';
 import * as authRequest from '../auth/types/auth-request';
 import { ApiTags, ApiConsumes, ApiBody } from '@nestjs/swagger';
+//import { RedisRateLimitGuard } from '../common/guards/redis-rate-limit.guard';
+import { SlidingWindowGuard } from '../common/guards/sliding-window.guard';
 // import { Throttle } from '@nestjs/throttler'; // Removed import as it's no longer needed
 
 @ApiTags('Users')
@@ -39,6 +41,7 @@ export class UsersController {
   }
 
   // ✅ GET ALL USERS
+  @UseGuards(SlidingWindowGuard)
   @Get()
   findAll() {
     return this.users.findAll();

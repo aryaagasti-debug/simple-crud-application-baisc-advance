@@ -1,10 +1,11 @@
-import { Controller, Post, Body, Res, Req } from '@nestjs/common';
+import { Controller, Post, Body, Res, Req, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import express from 'express';
 import { JwtService } from '@nestjs/jwt';
 import { AppLogger } from '../utils/logger';
 import { ApiOperation, ApiBody, ApiResponse } from '@nestjs/swagger';
+import { TokenBukcetGuard } from '../common/guards/token-bucket.guard';
 // import { Throttle } from '@nestjs/throttler'; // Removed import as it's no longer needed
 
 @Controller('auth')
@@ -16,6 +17,7 @@ export class AuthController {
 
   // ✅ Rate limiting now applied by the global guard using AppModule's default (3 req / 60s)
   // @Throttle({ default: { limit: 3, ttl: 60 } }) // Removed
+  @UseGuards(TokenBukcetGuard)
   @Post('login')
   @ApiOperation({ summary: 'User login using email & password' })
   @ApiBody({
