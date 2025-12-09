@@ -1,6 +1,7 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Req } from '@nestjs/common';
 import { AppService } from './app.service';
 import { RedisService } from './redis/redis.service';
+import express from 'express';
 
 @Controller()
 export class AppController {
@@ -8,6 +9,15 @@ export class AppController {
     private readonly appService: AppService,
     private readonly redis: RedisService,
   ) {}
+
+  @Get('csrf-token')
+  getCsrf(@Req() req: express.Request) {
+    if (!req.csrfToken) {
+      return { csrfToken: null };
+    }
+
+    return { csrfToken: req.csrfToken() };
+  }
 
   @Get('redis-test')
   async testRedis() {

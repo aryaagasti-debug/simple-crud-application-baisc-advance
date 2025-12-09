@@ -13,8 +13,12 @@ import { RedisRateLimitGuard } from './common/guards/redis-rate-limit.guard';
 //import { TokenBukcetGuard } from './common/guards/token-bucket.guard';
 //import { SlidingWindowGuard } from './common/guards/sliding-window.guard';
 import { HealthModule } from './health/health.module';
+import { ApiKeysModule } from './api-keys/api-keys.module';
+import { PartnerModule } from './partner/partner.module';
 @Module({
   imports: [
+    PartnerModule,
+    ApiKeysModule,
     HealthModule,
     RedisModule,
     ConfigModule.forRoot({ isGlobal: true }),

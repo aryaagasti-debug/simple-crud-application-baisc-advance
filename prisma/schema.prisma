@@ -24,3 +24,12 @@ model Post {
   authorId  Int
   author    User     @relation(fields: [authorId], references: [id])
 }
+
+model ApiKey {
+  id          Int      @id @default(autoincrement())
+  name        String
+  keyHash     String   @unique
+  isActive    Boolean  @default(true)
+  rateLimit   Int      @default(1000) // requests per hour
+  createdAt   DateTime @default(now())
+}
