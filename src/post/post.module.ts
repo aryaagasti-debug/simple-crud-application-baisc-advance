@@ -4,9 +4,9 @@ import { PostService } from './post.service';
 import { PrismaModule } from '../prisma/prisma.module';
 import { CloudinaryModule } from '../common/cloudinary/cloudinary.module';
 import { JwtService } from '@nestjs/jwt';
-
+import { RedisModule } from '../redis/redis.module';
 @Module({
-  imports: [PrismaModule, CloudinaryModule],
+  imports: [PrismaModule, CloudinaryModule, RedisModule],
   controllers: [PostController],
   providers: [PostService, JwtService],
 })

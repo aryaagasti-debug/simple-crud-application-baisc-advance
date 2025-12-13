@@ -3,12 +3,13 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { CloudinaryService } from '../common/cloudinary/cloudinary.service';
 import { AppLogger } from '../utils/logger';
 import { sanitizeText } from '../common/utils/sanitize';
-
+import { PublisherService } from '../redis/pubsub/publisher.service';
 @Injectable()
 export class PostService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly cloud: CloudinaryService,
+    private readonly publisher: PublisherService,
   ) {}
 
   async createPost(
@@ -42,6 +43,19 @@ export class PostService {
     AppLogger.info('Post created successfully', {
       postId: post.id,
     });
+
+    const notificationPayload = {
+      type: 'NEW_POST',
+      userId,
+      postId: post.id,
+      title: post.title,
+      time: new Date(),
+    };
+
+    await this.publisher.publish(
+      'notifications',
+      notificationPayload, // ✅ object pass karo
+    );
 
     return post;
   }
