@@ -5,7 +5,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { JwtModule } from '@nestjs/jwt';
 import { RedisModule } from '../redis/redis.module';
 import { TokenBukcetGuard } from '../common/guards/token-bucket.guard';
-
+import { SessionService } from './sessions/session.service';
 @Module({
   imports: [
     RedisModule,
@@ -15,7 +15,7 @@ import { TokenBukcetGuard } from '../common/guards/token-bucket.guard';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, PrismaService, TokenBukcetGuard],
-  exports: [JwtModule],
+  providers: [AuthService, PrismaService, TokenBukcetGuard, SessionService],
+  exports: [JwtModule, SessionService],
 })
 export class AuthModule {}

@@ -4,12 +4,14 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { LoginDto } from './dto/login.dto';
 import { AppLogger } from '../utils/logger';
+import { SessionService } from './sessions/session.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwt: JwtService,
+    private sessionService: SessionService,
   ) {}
 
   async login(dto: LoginDto) {
@@ -45,6 +47,8 @@ export class AuthService {
       secret: process.env.REFRESH_SECRET,
       expiresIn: '7d',
     });
+
+    await this.sessionService.saveSession(user.id, refreshToken);
 
     return { accessToken, refreshToken, user };
   }

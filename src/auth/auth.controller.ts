@@ -7,12 +7,14 @@ import { AppLogger } from '../utils/logger';
 import { ApiOperation, ApiBody, ApiResponse } from '@nestjs/swagger';
 import { TokenBukcetGuard } from '../common/guards/token-bucket.guard';
 // import { Throttle } from '@nestjs/throttler'; // Removed import as it's no longer needed
+import { SessionService } from './sessions/session.service';
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private auth: AuthService,
     private jwt: JwtService,
+    private sessions: SessionService,
   ) {}
 
   // ✅ Rate limiting now applied by the global guard using AppModule's default (3 req / 60s)
@@ -59,6 +61,16 @@ export class AuthController {
       secret: process.env.REFRESH_SECRET,
     });
 
+    const valid = await this.sessions.isValidateSession(
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
+      payload.id,
+
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      token,
+    );
+
+    if (!valid) throw new Error('Invalid session');
+
     const newAccess = this.jwt.sign(
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
       { id: payload.id, email: payload.email, role: payload.role },
@@ -67,5 +79,45 @@ export class AuthController {
 
     res.cookie('access_token', newAccess, { httpOnly: true });
     return { message: 'New access token created' };
+  }
+
+  @Post('logout')
+  async logout(
+    @Req() req: express.Request,
+    @Res({ passthrough: true }) res: express.Response,
+  ) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const token = req.cookies['refresh_token'];
+    if (!token) return { message: 'Already logged out' };
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument
+    const payload = await this.jwt.verifyAsync(token, {
+      secret: process.env.REFRESH_SECRET,
+    });
+
+    // Delete this single session
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
+    await this.sessions.deleteSession(payload.id, token);
+
+    res.clearCookie('access_token');
+
+    res.clearCookie('refresh_token');
+
+    return { message: 'Logged out successfully' };
+  }
+
+  @Post('logout-all')
+  async logoutAll(@Req() req: express.Request) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const token = req.cookies['refresh_token'];
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument
+    const payload = await this.jwt.verifyAsync(token, {
+      secret: process.env.REFRESH_SECRET,
+    });
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
+    await this.sessions.deleteAllSessionsForUser(payload.id);
+
+    return { message: 'Logged out from all devices' };
   }
 }
