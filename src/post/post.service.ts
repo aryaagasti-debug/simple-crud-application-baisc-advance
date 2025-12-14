@@ -4,12 +4,14 @@ import { CloudinaryService } from '../common/cloudinary/cloudinary.service';
 import { AppLogger } from '../utils/logger';
 import { sanitizeText } from '../common/utils/sanitize';
 import { PublisherService } from '../redis/pubsub/publisher.service';
+import { StreamProducerService } from '../redis/stream/stream-producer.service';
 @Injectable()
 export class PostService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly cloud: CloudinaryService,
     private readonly publisher: PublisherService,
+    private readonly streamProducer: StreamProducerService,
   ) {}
 
   async createPost(
@@ -52,10 +54,21 @@ export class PostService {
       time: new Date(),
     };
 
+    const streamPayload = {
+      type: 'NEW_POST',
+      // Convert number/Date types to string
+      userId: userId.toString(),
+      postId: post.id.toString(),
+      title: post.title,
+      time: new Date().toISOString(), // Convert Date to ISO string
+    };
+
     await this.publisher.publish(
       'notifications',
       notificationPayload, // ✅ object pass karo
     );
+
+    await this.streamProducer.add('stream:notifications', streamPayload);
 
     return post;
   }
