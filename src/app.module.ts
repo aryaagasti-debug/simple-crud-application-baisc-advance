@@ -15,8 +15,12 @@ import { RedisRateLimitGuard } from './common/guards/redis-rate-limit.guard';
 import { HealthModule } from './health/health.module';
 import { ApiKeysModule } from './api-keys/api-keys.module';
 import { PartnerModule } from './partner/partner.module';
+import { RedlockService } from './common/locks/redlock.service';
+import { PaymentModule } from './payment/payment.module';
+import { CommonLocksModule } from './common/locks/common-locks.module';
 @Module({
   imports: [
+    PaymentModule,
     PartnerModule,
     ApiKeysModule,
     HealthModule,
@@ -33,14 +37,18 @@ import { PartnerModule } from './partner/partner.module';
       ],
     }),
 
+    CommonLocksModule,
+
     PrismaModule,
     AuthModule,
     UsersModule,
     PostModule,
+    PaymentModule,
   ],
   controllers: [AppController],
   providers: [
     AppService,
+    RedlockService,
 
     // ✅ GLOBAL GUARD (This correctly applies the rate limit to all routes)
     {
