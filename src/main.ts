@@ -6,9 +6,18 @@ import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { csrfProtection } from './common/middleware/csrf.middleware';
+import { createKafkaTopic } from './kafka/topic';
+import { startOrderConsumer } from './kafka/consumers/order.consume';
+import { startNotificationConsumer } from './kafka/consumers/notification.consumer';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  //create kafka topics
+  await createKafkaTopic();
+  //start kafka consumers
+  await startOrderConsumer();
+  await startNotificationConsumer();
 
   // ✅ ✅ FIXED TRUST PROXY (RATE LIMIT WILL WORK)
   // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access

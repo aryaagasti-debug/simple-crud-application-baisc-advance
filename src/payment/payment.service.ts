@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { RedlockService } from '../common/locks/redlock.service';
-
+import { OrderCreatedEvent } from '../kafka/types/order.event';
+import { emitOrderCreated } from '../kafka/producers/order.producer';
 @Injectable()
 export class PaymentService {
   constructor(private readonly redlock: RedlockService) {}
@@ -8,6 +9,16 @@ export class PaymentService {
   async pay(userId: number) {
     const lockKey = `lock:payment:${userId}`;
     let lockValue: string;
+
+    const event: OrderCreatedEvent = {
+      orderId: Date.now(),
+      userId,
+      amount: 500,
+      status: 'PAID',
+      createdAt: new Date().toISOString(),
+    };
+
+    await emitOrderCreated(event);
 
     // 🔒 ACQUIRE LOCK
     try {
