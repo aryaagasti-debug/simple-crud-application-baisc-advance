@@ -18,8 +18,10 @@ import { PartnerModule } from './partner/partner.module';
 import { RedlockService } from './common/locks/redlock.service';
 import { PaymentModule } from './payment/payment.module';
 import { CommonLocksModule } from './common/locks/common-locks.module';
+import { QueueModule } from './queue/queue.module';
 @Module({
   imports: [
+    QueueModule,
     PaymentModule,
     PartnerModule,
     ApiKeysModule,
